@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$title}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f6f8;
+            color: #1f2329;
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .sub {
+            color: #8a8f99;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #ebedf0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 72px;
+            resize: vertical;
+            padding: 10px 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 8px;
+            font: inherit;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #3370ff;
+        }
+
+        .models {
+            display: flex;
+            gap: 8px 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .models label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border: 1px solid #dcdfe6;
+            border-radius: 999px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 13px;
+            transition: all .15s;
+        }
+
+        .models label:hover {
+            border-color: #3370ff;
+            color: #3370ff;
+        }
+
+        .models input {
+            accent-color: #3370ff;
+            cursor: pointer;
+        }
+
+        .models .chk-all {
+            background: #e9edf3;
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .models .model-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 6px;
+            border: 1px dashed #c9cdd4;
+            border-radius: 999px;
+            font-size: 13px;
+        }
+
+        .models .model-add input {
+            border: 0;
+            outline: none;
+            width: 130px;
+            background: transparent;
+            font: inherit;
+        }
+
+        .providers {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #4e5969;
+        }
+
+        .providers input {
+            padding: 5px 9px;
+            border: 1px solid #dcdfe6;
+            border-radius: 8px;
+            font: inherit;
+            outline: none;
+            min-width: 150px;
+        }
+
+        .providers input:focus {
+            border-color: #3370ff;
+        }
+
+        .model-tip {
+            font-size: 12px;
+            color: #f53f3f;
+        }
+
+        button {
+            padding: 9px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #3370ff;
+            color: #fff;
+            font: inherit;
+            cursor: pointer;
+            transition: opacity .15s;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        button.secondary {
+            background: #e9edf3;
+            color: #1f2329;
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        .status {
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #c9cdd4;
+        }
+
+        .dot.live {
+            background: #00b42a;
+            animation: pulse 1s infinite;
+        }
+
+        .dot.err {
+            background: #f53f3f;
+        }
+
+        .dot.done {
+            background: #86909c;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .3; }
+        }
+
+        /* 多模型输出网格 */
+        .outputs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid #ebedf0;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 220px;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f1f3;
+        }
+
+        .panel-name {
+            font-weight: 600;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .panel-stat {
+            margin-left: auto;
+            font-size: 12px;
+            color: #86909c;
+            white-space: nowrap;
+        }
+
+        .panel-out {
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.75;
+            flex: 1;
+            color: #1f2329;
+            max-height: 340px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #c9cdd4 transparent;
+        }
+
+        .panel-out::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .panel-out::-webkit-scrollbar-thumb {
+            background: #c9cdd4;
+            border-radius: 3px;
+        }
+
+        .panel-out::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .panel-out.empty {
+            color: #c9cdd4;
+        }
+
+        /* 流式打字光标：柔和的竖条 + 平滑闪烁 */
+        .caret::after {
+            content: '';
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            background: #3370ff;
+            border-radius: 1px;
+            animation: blink 1s steps(2, start) infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            50.01%, 100% { opacity: 0; }
+        }
+
+        .panel-meta {
+            font-size: 12px;
+            color: #86909c;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ebedf0;
+            min-height: 4px;
+        }
+
+        .empty-tip {
+            color: #c9cdd4;
+            text-align: center;
+            padding: 60px 0;
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>{$title}</h1>
+        <div class="sub">Server-Sent Events · 多模型并发 · 每个模型各开一条连接并行加载</div>
+
+        <div class="card">
+            <div class="providers">
+                <span>供应商</span>
+                <input id="provider" list="providerList" value="apilio" placeholder="输入或选择供应商" autocomplete="off">
+                <datalist id="providerList"></datalist>
+            </div>
+            <div class="models" id="models" style="margin-bottom: 12px;">
+                <span style="color:#86909c">模型加载中…</span>
+            </div>
+            <span class="model-tip" id="modelTip"></span>
+
+            <div style="margin-bottom: 12px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-size:13px;color:#4e5969;font-weight:500;">系统提示词</span>
+                    <button type="button" id="toggleSystem" class="secondary" style="padding:3px 10px;font-size:12px;">展开</button>
+                </div>
+                <textarea id="systemPrompt" placeholder="设置系统角色、行为规范等…" style="min-height:56px;display:none;"></textarea>
+            </div>
+
+            <textarea id="prompt" placeholder="输入你的问题…（Ctrl+Enter 发送）"></textarea>
+
+            <div class="row" style="margin-top: 12px;">
+                <button id="send">发送</button>
+                <button id="stop" class="secondary" disabled>停止</button>
+                <button id="clear" class="secondary">清空</button>
+                <span class="spacer"></span>
+                <span class="status">
+                    <span class="dot" id="dot"></span>
+                    <span id="stat">空闲</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="outputs-grid" id="outputs">
+            <div class="empty-tip">（勾选模型并发送后，各模型输出将在这里并排逐字出现…）</div>
+        </div>
+    </div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+        const outputs = $('outputs'), stat = $('stat'), dot = $('dot');
+        const modelsBox = $('models'), modelTip = $('modelTip');
+        const providerInp = $('provider'), providerList = $('providerList');
+        const PLACEHOLDER = '（等待输出…）';
+
+        let modelList = [];
+        let conns = [];   // [{es, model, done}] 当前进行中的连接
+
+        function setStatus(state, text) {
+            dot.className = 'dot' + (state ? ' ' + state : '');
+            stat.textContent = text;
+        }
+
+        function getProvider() {
+            return providerInp.value.trim() || 'openclaw';
+        }
+
+        // 渲染模型区：全选开关 + 已有 chip + 添加输入框
+        function renderModels() {
+            modelsBox.innerHTML = '';
+            // 全选开关（默认不选中）
+            const all = document.createElement('label');
+            all.className = 'chk-all';
+            all.innerHTML = '<input type="checkbox" id="chkAll"> 全选';
+            modelsBox.appendChild(all);
+            $('chkAll').addEventListener('change', e => {
+                modelsBox.querySelectorAll('input[data-model]').forEach(c => c.checked = e.target.checked);
+            });
+            // 已有模型（默认只勾选前 3 个）
+            modelList.forEach((id, idx) => {
+                const lab = document.createElement('label');
+                const removable = idx >= 4; // 默认 4 个不可删，后加的可删
+                const checked = idx < 3 ? ' checked' : '';
+                lab.innerHTML =
+                    '<input type="checkbox" data-model="' + id + '"' + checked + '> ' +
+                    '<span>' + id + '</span>' +
+                    (removable ? '<span class="del" style="margin-left:4px;color:#86909c;cursor:pointer">×</span>' : '');
+                modelsBox.appendChild(lab);
+                if (removable) {
+                    lab.querySelector('.del').addEventListener('click', ev => {
+                        ev.preventDefault();
+                        modelList = modelList.filter(m => m !== id);
+                        renderModels();
+                    });
+                }
+            });
+            // 添加模型输入框
+            const add = document.createElement('span');
+            add.className = 'model-add';
+            add.innerHTML = '+ <input type="text" id="newModel" placeholder="输入模型回车添加">';
+            modelsBox.appendChild(add);
+            const inp = $('newModel');
+            inp.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const v = inp.value.trim();
+                    if (v && !modelList.includes(v)) {
+                        modelList.push(v);
+                        renderModels();
+                    } else {
+                        inp.value = '';
+                    }
+                }
+            });
+        }
+
+        // 从 /llm/models 加载默认模型清单 + 供应商清单
+        async function loadModels() {
+            try {
+                const resp = await fetch('/llm/models');
+                const json = await resp.json();
+                modelList = Array.isArray(json.data) ? json.data : [];
+                modelsBox.innerHTML = '';
+                if (!modelList.length) {
+                    modelsBox.innerHTML = '<span style="color:#86909c">无可用模型</span>';
+                    modelTip.textContent = json.message || '未获取到模型';
+                    return;
+                }
+                renderModels();
+                // 供应商 datalist 候选
+                providerList.innerHTML = '';
+                (json.providers || []).forEach(p => {
+                    const o = document.createElement('option');
+                    o.value = p;
+                    providerList.appendChild(o);
+                });
+                modelTip.textContent = '';
+            } catch (e) {
+                modelsBox.innerHTML = '<span style="color:#86909c">加载失败</span>';
+                modelTip.textContent = '模型列表请求失败：' + e.message;
+            }
+        }
+
+        function getSelected() {
+            return Array.from(modelsBox.querySelectorAll('input[data-model]:checked')).map(c => c.dataset.model);
+        }
+
+        function getSystemPrompt() {
+            return $('systemPrompt').value.trim();
+        }
+
+        function buildUrl(model, prompt) {
+            let url = '/llm/chat?provider=' + encodeURIComponent(getProvider()) +
+                '&model=' + encodeURIComponent(model) + '&prompt=' + encodeURIComponent(prompt);
+            const sp = getSystemPrompt();
+            if (sp) {
+                url += '&system=' + encodeURIComponent(sp);
+            }
+            return url;
+        }
+
+        // 创建一个模型的输出面板，返回操作句柄
+        function createPanel(model) {
+            const card = document.createElement('div');
+            card.className = 'panel';
+            card.dataset.model = model;
+            card.innerHTML =
+                '<div class="panel-head">' +
+                    '<span class="dot"></span>' +
+                    '<span class="panel-name"></span>' +
+                    '<span class="panel-stat">等待</span>' +
+                '</div>' +
+                '<div class="panel-out empty">' + PLACEHOLDER + '</div>' +
+                '<div class="panel-meta"></div>';
+            outputs.appendChild(card);
+            card.querySelector('.panel-name').textContent = model;
+
+            let received = false;
+            const out = card.querySelector('.panel-out');
+            const dotEl = card.querySelector('.dot');
+            const statEl = card.querySelector('.panel-stat');
+
+            // 仅在用户未手动上滑时自动跟随到底部
+            const scrollToBottom = () => {
+                const nearBottom = out.scrollHeight - out.scrollTop - out.clientHeight < 60;
+                if (nearBottom) {
+                    out.scrollTop = out.scrollHeight;
+                }
+            };
+
+            return {
+                meta(time) {
+                    card.querySelector('.panel-meta').textContent = time || '';
+                    dotEl.className = 'dot live';
+                    statEl.textContent = '接收中';
+                },
+                delta(text) {
+                    if (!received) {
+                        out.textContent = '';
+                        out.classList.remove('empty');
+                        out.classList.add('caret');
+                        received = true;
+                    }
+                    out.textContent += text;
+                    scrollToBottom();
+                },
+                done() {
+                    dotEl.className = 'dot done';
+                    statEl.textContent = '完成';
+                    out.classList.remove('caret');
+                },
+                fail(msg) {
+                    dotEl.className = 'dot err';
+                    statEl.textContent = '失败';
+                    out.classList.remove('caret');
+                    out.classList.remove('empty');
+                    out.textContent += (received ? '\n' : '') + '⚠ ' + (msg || '未知错误');
+                    scrollToBottom();
+                },
+            };
+        }
+
+        // 某条连接结束（done/fail/error）时调用，统计是否全部完成
+        function markConnDone(conn) {
+            if (conn.done) return;
+            conn.done = true;
+            conn.es.close();
+            const finished = conns.filter(c => c.done).length;
+            if (finished < conns.length) {
+                setStatus('live', '接收中（' + finished + '/' + conns.length + ' 完成）');
+            } else {
+                setStatus('done', '完成');
+                $('send').disabled = false;
+                $('stop').disabled = true;
+            }
+        }
+
+        function start() {
+            const models = getSelected();
+            if (!models.length) {
+                modelTip.textContent = '请至少选择一个模型';
+                return;
+            }
+            const prompt = $('prompt').value.trim();
+            if (!prompt) {
+                modelTip.textContent = '请输入内容';
+                return;
+            }
+            modelTip.textContent = '';
+            stopAll();
+
+            outputs.innerHTML = '';
+            conns = [];
+
+            // 为每个选中的模型创建面板 + 独立 EventSource 并行加载
+            models.forEach(model => {
+                const panel = createPanel(model);
+                const es = new EventSource(buildUrl(model, prompt));
+                const conn = {es, model, done: false};
+                conns.push(conn);
+
+                es.addEventListener('meta', e => {
+                    const d = JSON.parse(e.data);
+                    panel.meta(d.time);
+                });
+                es.addEventListener('delta', e => {
+                    const d = JSON.parse(e.data);
+                    panel.delta(d.content);
+                });
+                es.addEventListener('done', () => {
+                    panel.done();
+                    markConnDone(conn);
+                });
+                es.addEventListener('fail', e => {
+                    const d = JSON.parse(e.data);
+                    panel.fail(d.message);
+                    markConnDone(conn);
+                });
+                es.onerror = () => {
+                    if (!conn.done) {
+                        panel.fail('连接断开');
+                        markConnDone(conn);
+                    }
+                };
+            });
+
+            setStatus('live', '接收中（0/' + conns.length + ' 完成）');
+            $('send').disabled = true;
+            $('stop').disabled = false;
+        }
+
+        function stopAll() {
+            conns.forEach(c => {
+                c.done = true;
+                c.es.close();
+            });
+            conns = [];
+        }
+
+        $('send').addEventListener('click', start);
+        $('stop').addEventListener('click', () => {
+            stopAll();
+            setStatus('done', '已停止');
+            $('send').disabled = false;
+            $('stop').disabled = true;
+        });
+        $('clear').addEventListener('click', () => {
+            stopAll();
+            outputs.innerHTML = '<div class="empty-tip">（勾选模型并发送后，各模型输出将在这里并排逐字出现…）</div>';
+            setStatus('', '空闲');
+        });
+        $('prompt').addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === 'Enter') start();
+        });
+        $('toggleSystem').addEventListener('click', () => {
+            const sp = $('systemPrompt');
+            const btn = $('toggleSystem');
+            if (sp.style.display === 'none') {
+                sp.style.display = '';
+                btn.textContent = '收起';
+            } else {
+                sp.style.display = 'none';
+                btn.textContent = '展开';
+            }
+        });
+
+        loadModels();
+    </script>
+</body>
+
+</html>

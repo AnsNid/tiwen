@@ -1,0 +1,102 @@
+{
+  "tables": {
+    "member_consume": {
+      "columns": {
+        "id": {
+          "type": "integer",
+          "length": 11,
+          "autoIncrement": true,
+          "primary": true
+        },
+        "uid": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "会员"
+        },
+        "uin": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "UIN"
+        },
+        "uniqid": {
+          "type": "string",
+          "length": 18,
+          "charset": "utf8",
+          "default": "",
+          "comment": "唯一ID,避免重复操作"
+        },
+        "amount": {
+          "type": "decimal",
+          "precision": 10,
+          "scale": 2,
+          "default": "0.00",
+          "comment": "操作金额"
+        },
+        "balance": {
+          "type": "decimal",
+          "precision": 10,
+          "scale": 2,
+          "default": "0.00",
+          "comment": "余额"
+        },
+        "currency": {
+          "type": "string",
+          "length": 18,
+          "charset": "utf8",
+          "default": "money",
+          "comment": "货币"
+        },
+        "type": {
+          "type": "string",
+          "length": 50,
+          "charset": "utf8",
+          "default": "",
+          "comment": "类型"
+        },
+        "data": {
+          "type": "text",
+          "nullable": true,
+          "comment": "数据包"
+        },
+        "created_at": {
+          "type": "timestamp",
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "创建的时间"
+        },
+        "expired_at": {
+          "type": "datetime",
+          "nullable": true,
+          "comment": "到期时间, NULL 为永久有效"
+        },
+        "expired_settled": {
+          "type": "integer",
+          "length": 1,
+          "nullable": false,
+          "default": 0,
+          "comment": "到期是否已冲销"
+        }
+      },
+      "indexes": {
+        "uniqid": {
+          "columns": ["uniqid"],
+          "unique": true
+        },
+        "created_at": ["created_at"],
+        "currency": ["currency"],
+        "type": ["type"],
+        "idx_uid_currency": ["uid", "currency"],
+        "idx_uin_currency": ["uin", "currency"],
+        "idx_expired": ["expired_settled", "expired_at"]
+      },
+      "options": {
+        "comment": "会员积分明细",
+        "charset": "utf8mb4",
+        "engine": "InnoDB"
+      }
+    }
+  }
+}

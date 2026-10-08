@@ -1,0 +1,123 @@
+{
+  "tables": {
+    "application": {
+      "columns": {
+        "id": {
+          "type": "integer",
+          "unsigned": true,
+          "autoIncrement": true,
+          "primary": true
+        },
+        "app": {
+          "type": "string",
+          "length": 20,
+          "nullable": true,
+          "comment": "应用目录",
+          "unique": true
+        },
+        "description": {
+          "type": "text",
+          "nullable": true,
+          "comment": "介绍"
+        },
+        "tables": {
+          "type": "string",
+          "length": 60,
+          "nullable": true,
+          "comment": "数据表"
+        },
+        "author": {
+          "type": "string",
+          "length": 60,
+          "nullable": true,
+          "comment": "开发者"
+        },
+        "name": {
+          "type": "string",
+          "length": 60,
+          "nullable": true,
+          "comment": "名字"
+        },
+        "seo": {
+          "type": "text",
+          "nullable": true,
+          "comment": "SEO配置"
+        },
+        "allowdomain": {
+          "type": "text",
+          "length": "tiny",
+          "nullable": true,
+          "comment": "允许访问的域名"
+        },
+        "version": {
+          "type": "string",
+          "length": 20,
+          "nullable": true,
+          "comment": "版本号"
+        },
+        "site": {
+          "type": "string",
+          "length": 200,
+          "nullable": true,
+          "comment": "网址"
+        },
+        "menu": {
+          "type": "text",
+          "nullable": true,
+          "comment": "菜单"
+        },
+        "timestamp": {
+          "type": "integer",
+          "unsigned": true,
+          "default": 0,
+          "comment": "安装时间"
+        },
+        "status": {
+          "type": "integer",
+          "length": 1,
+          "default": 1,
+          "comment": "状态"
+        },
+        "admin_enable": {
+          "type": "integer",
+          "length": 1,
+          "default": 1,
+          "comment": "是否进入后台管理"
+        },
+        "admin_config": {
+          "type": "text",
+          "nullable": true,
+          "comment": "后台管理配置JSON(路径/菜单/表格等)"
+        }
+      },
+      "options": {
+        "comment": "模块,应用,组件",
+        "charset": "utf8mb4",
+        "engine": "InnoDB"
+      }
+    },
+    "config": {
+      "columns": {
+        "name": {
+          "type": "string",
+          "length": 38,
+          "nullable": false,
+          "default": "",
+          "comment": "配置名",
+          "primary": true,
+          "unique": true
+        },
+        "value": {
+          "type": "text",
+          "nullable": false,
+          "comment": "参数"
+        }
+      },
+      "options": {
+        "comment": "核心设置相关",
+        "charset": "utf8mb4",
+        "engine": "InnoDB"
+      }
+    }
+  }
+}

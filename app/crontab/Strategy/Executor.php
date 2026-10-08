@@ -1,0 +1,197 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\crontab\Strategy;
+
+use Carbon\Carbon;
+use Closure;
+use xphp\Contract\ApplicationInterface;
+use xphp\Contract\StdoutLoggerInterface;
+use xphp\Coordinator\Timer;
+use App\crontab\Crontab;
+use App\crontab\Event\AfterExecute;
+use App\crontab\Event\BeforeExecute;
+use App\crontab\Event\FailToExecute;
+use App\crontab\Exception\InvalidArgumentException;
+use App\crontab\LoggerInterface;
+use App\crontab\Mutex\ServerMutex;
+use App\crontab\Mutex\TaskMutex;
+use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Log\LoggerInterface as PsrLoggerInterface;
+use RuntimeException;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+use Throwable;
+
+use function xphp\Support\make;
+
+class Executor {
+    protected ?PsrLoggerInterface $logger = null;
+
+    protected ?TaskMutex $taskMutex = null;
+
+    protected ?ServerMutex $serverMutex = null;
+
+    protected ?EventDispatcherInterface $dispatcher = null;
+
+    protected Timer $timer;
+
+    public function __construct(protected ContainerInterface $container) {
+        $this->logger = match (true) {
+            $container->has(LoggerInterface::class) => $container->get(LoggerInterface::class),
+            $container->has(StdoutLoggerInterface::class) => $container->get(StdoutLoggerInterface::class),
+            default => null,
+        };
+        if ($container->has(EventDispatcherInterface::class)) {
+            $this->dispatcher = $container->get(EventDispatcherInterface::class);
+        }
+        $this->timer = new Timer($this->logger);
+    }
+
+    public function execute(Crontab $crontab) {
+        $this->dispatcher?->dispatch(new BeforeExecute($crontab));
+        try {
+            $diff = Carbon::now()->diffInRealSeconds($crontab->getExecuteTime(), false);
+            $runnable = null;
+
+            switch ($crontab->getType()) {
+                case 'closure':
+                    $runnable = $crontab->getCallback();
+                    break;
+                case 'callback':
+                    [$class, $method] = $crontab->getCallback();
+                    $parameters = $crontab->getCallback()[2] ?? null;
+                    if ($class && $method && class_exists($class) && method_exists($class, $method)) {
+                        $runnable = function () use ($class, $method, $parameters) {
+                            $instance = make($class);
+                            if ($parameters && is_array($parameters)) {
+                                return $instance->{$method}(...$parameters);
+                            }
+                            return $instance->{$method}();
+                        };
+                    }
+                    break;
+                case 'command':
+                    $callback = $crontab->getCallback();
+                    $input = make(ArrayInput::class, [is_array($callback) ? $callback : ['command' => $callback]]);
+                    $output = make(NullOutput::class);
+                    /** @var Application */
+                    $application = $this->container->get(ApplicationInterface::class);
+                    $application->setAutoExit(false);
+                    $application->setCatchExceptions(false);
+                    $runnable = function () use ($application, $input, $output) {
+                        if ($application->run($input, $output) !== 0) {
+                            throw new RuntimeException('Crontab task failed to execute.');
+                        }
+                    };
+                    break;
+                case 'eval':
+                    $runnable = fn() => eval($crontab->getCallback());
+                    break;
+                default:
+                    throw new InvalidArgumentException(sprintf('Crontab task type [%s] is invalid.', $crontab->getType()));
+            }
+
+            $runnable = function ($isClosing) use ($crontab, $runnable) {
+                if ($isClosing) {
+                    $crontab->close();
+                    $this->logResult($crontab, false);
+                    return;
+                }
+                try {
+                    $runnable = $this->catchToExecute($crontab, $runnable);
+                    $this->decorateRunnable($crontab, $runnable)();
+                } finally {
+                    $crontab->complete();
+                }
+            };
+            $this->timer->after(max($diff, 0), $runnable);
+        } catch (Throwable $exception) {
+            $this->dispatcher?->dispatch(new FailToExecute($crontab, $exception));
+            $crontab->close();
+            throw $exception;
+        }
+    }
+
+    protected function runInSingleton(Crontab $crontab, Closure $runnable): Closure {
+        return function () use ($crontab, $runnable) {
+            $taskMutex = $this->getTaskMutex();
+
+            if ($taskMutex->exists($crontab) || ! $taskMutex->create($crontab)) {
+                $this->logger?->info(sprintf('Crontab task [%s] skipped execution at %s caused by task mutex.', $crontab->getName(), date('Y-m-d H:i:s')));
+                return;
+            }
+
+            try {
+                $runnable();
+            } finally {
+                $taskMutex->remove($crontab);
+            }
+        };
+    }
+
+    protected function getTaskMutex(): TaskMutex {
+        return $this->taskMutex ??= $this->container->get(TaskMutex::class);
+    }
+
+    protected function runOnOneServer(Crontab $crontab, Closure $runnable): Closure {
+        return function () use ($crontab, $runnable) {
+            $taskMutex = $this->getServerMutex();
+
+            if (! $taskMutex->attempt($crontab)) {
+                $this->logger?->info(sprintf('Crontab task [%s] skipped execution at %s caused by server mutex.', $crontab->getName(), date('Y-m-d H:i:s')));
+                return;
+            }
+
+            $runnable();
+        };
+    }
+
+    protected function getServerMutex(): ServerMutex {
+        return $this->serverMutex ??= $this->container->get(ServerMutex::class);
+    }
+
+    protected function decorateRunnable(Crontab $crontab, Closure $runnable): Closure {
+        if ($crontab->isSingleton()) {
+            $runnable = $this->runInSingleton($crontab, $runnable);
+        }
+
+        if ($crontab->isOnOneServer()) {
+            $runnable = $this->runOnOneServer($crontab, $runnable);
+        }
+
+        return $runnable;
+    }
+
+    protected function catchToExecute(Crontab $crontab, ?Closure $runnable): Closure {
+        return function () use ($crontab, $runnable) {
+            try {
+                $result = true;
+                if (! $runnable) {
+                    throw new InvalidArgumentException('The crontab task is invalid.');
+                }
+                $result = $runnable();
+                $this->dispatcher?->dispatch(new AfterExecute($crontab, $result));
+            } catch (Throwable $throwable) {
+                $result = false;
+                $this->dispatcher?->dispatch(new FailToExecute($crontab, $throwable));
+            } finally {
+                $this->logResult($crontab, $result, $throwable ?? null);
+            }
+        };
+    }
+
+    protected function logResult(Crontab $crontab, mixed $result, ?Throwable $throwable = null) {
+        // 无返回值(void/null)的任务视为成功;仅显式 false 或抛出异常记为失败
+        if ($throwable !== null || $result === false) {
+            $this->logger?->error(sprintf('Crontab task [%s] failed execution at %s | result=%s', $crontab->getName(), date('Y-m-d H:i:s'), $throwable ? $throwable->getMessage() : 'false'));
+            $throwable && $this->logger?->error((string) $throwable);
+            return;
+        }
+        $summary = $result === null || $result === true ? 'ok' : (is_scalar($result) ? (string) $result : json_encode($result));
+        $this->logger?->info(sprintf('Crontab task [%s] executed successfully at %s | result=%s', $crontab->getName(), date('Y-m-d H:i:s'), $summary));
+    }
+}

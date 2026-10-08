@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f5f7fb;
+  --ink: #1b2230;
+  --soft: #65718a;
+  --line: #e7ebf3;
+  --brand: #2f6bff;
+  --brand-d: #1e4fd6;
+  --brand-s: #eef4ff;
+  --gpt: #0fa815;
+  --claude: #7b52d7;
+  --gemini: #f58720;
+}
+
+html, body {
+  font-family: 'Noto Sans SC', -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  min-height: 100vh;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Interactive Pointer Cursor Styles */
+button,
+[role="button"],
+a,
+select,
+summary,
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="button"],
+.clickable {
+  cursor: pointer;
+}
+
+button:disabled,
+[disabled],
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Subtle background grid pattern for decorative showcase areas */
+.bg-grid-pattern {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+.animate-dot-1 { animation: pulse-subtle 1.2s infinite ease-in-out; }
+.animate-dot-2 { animation: pulse-subtle 1.2s infinite ease-in-out 0.2s; }
+.animate-dot-3 { animation: pulse-subtle 1.2s infinite ease-in-out 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

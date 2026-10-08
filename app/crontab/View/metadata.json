@@ -1,0 +1,6 @@
+{
+  "name": "Crontab 管理面板",
+  "description": "基于 React 的计划任务 (Crontab) 管理系统",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

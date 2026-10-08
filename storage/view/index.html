@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>安装成功</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 50px 20px;
+            position: relative;
+        }
+
+        .success-container {
+            width: 800px;
+            margin: 20px auto;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+        }
+
+        @media only screen and (max-width: 860px) {
+            body {
+                padding: 0;
+                margin: 0;
+                height: 100vh;
+                width: 100vw;
+                overflow: hidden;
+            }
+
+            .success-container {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 20px !important;
+                border-radius: 0;
+                box-shadow: none;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                max-height: 100vh;
+            }
+        }
+
+        .success-icon {
+            font-size: 80px;
+            color: #52c41a;
+            margin-bottom: 24px;
+        }
+
+        .success-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+
+        .success-message {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 32px;
+        }
+
+        .success-button {
+            padding: 12px 24px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .success-button:hover {
+            background: #1976d2;
+        }
+
+        /* 聊天功能样式 */
+        .chat-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #2196f3;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s, background 0.3s;
+            z-index: 1000;
+        }
+
+        .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            text-align: center;
+            background-color: #ff5252;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: none;
+            /* 默认隐藏 */
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-toggle:hover {
+            background: #1976d2;
+            transform: scale(1.1);
+        }
+
+        .chat-container {
+            display: none;
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 350px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+        }
+
+        .chat-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .connection-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .connection-status.disconnected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .messages {
+            height: calc(100vh - 320px);
+            padding: 10px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .message {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 90%;
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-all;
+        }
+
+        .message.system {
+            background: #f5f5f5;
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+            margin: 6px auto;
+            padding: 6px 10px;
+            max-width: 60%;
+        }
+
+        .message.received,
+        .message.sent {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .message.received {
+            margin-right: auto;
+        }
+
+        .message.sent {
+            flex-direction: row-reverse;
+            margin-left: auto;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .message.received .avatar {
+            background-color: #1565c0;
+        }
+
+        .message.sent .avatar {
+            background-color: #2e7d32;
+        }
+
+        .message-content {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .message.sent .message-content {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            border-top: 1px solid #eee;
+            background: white;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
+
+        .send-button {
+            padding: 8px 16px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .send-button:hover {
+            background: #1976d2;
+        }
+
+        .shake-animation {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            10% {
+                transform: translate(-1px, -2px) rotate(-1deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(1deg);
+            }
+
+            30% {
+                transform: translate(3px, 2px) rotate(0deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            50% {
+                transform: translate(-1px, 2px) rotate(-1deg);
+            }
+
+            60% {
+                transform: translate(-3px, 1px) rotate(0deg);
+            }
+
+            70% {
+                transform: translate(3px, 1px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(-1px, -1px) rotate(1deg);
+            }
+
+            90% {
+                transform: translate(1px, 2px) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(1px, -2px) rotate(-1deg);
+            }
+        }
+
+        @media only screen and (max-width: 860px) {
+            .chat-container {
+                width: 90%;
+                bottom: 80px;
+                right: 5%;
+                left: 5%;
+            }
+
+            .chat-toggle {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 添加音频元素 -->
+    <audio id="notificationSound" src="" preload="auto"></audio>
+    <!-- 安装成功界面 -->
+    <div class="success-container">
+        <div class="success-icon">✓</div>
+        <div class="success-title">安装成功</div>
+        <div class="success-message">恭喜您，系统已成功安装！</div>
+        <button class="success-button" onclick="window.location.href='/{$adminhostpath}'">进入系统</button>
+    </div>
+
+    <!-- 聊天功能 -->
+    <div class="chat-toggle" onclick="toggleChat()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <div class="badge"></div>
+    </div>
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="chat-title">实时聊天室</div>
+            <div id="connectionStatus" class="connection-status">连接中...</div>
+        </div>
+        <div class="messages" id="messageArea"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="输入消息..." />
+            <button class="send-button" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+
+
+    <script>
+        let socket;
+        const messageArea = document.getElementById('messageArea');
+        const messageInput = document.getElementById('messageInput');
+        const connectionStatus = document.getElementById('connectionStatus');
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const reconnectDelay = 3000;
+        let unreadCount = 0; // 添加未读消息计数器
+        let chatVisible = false; // 添加聊天窗口可见状态
+        let userData = {}; // 存储用户数据
+
+        function getUnreadCount() {
+            return unreadCount;
+        }
+
+        function connectSocket() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.hostname;
+            const wsPort = window.location.port || '';
+            const wsUrl = `${wsProtocol}//${wsHost}${wsPort ? ':' + wsPort : ''}`;
+            socket = io(wsUrl, {
+                transports: ["websocket"],
+                reconnection: false //  ourselves handle reconnect logic
+            });
+
+            socket.on('connect', () => {
+                reconnectAttempts = 0;
+                connectionStatus.textContent = '已连接';
+                connectionStatus.classList.remove('disconnected');
+                socket.emit('join', { room: 'general' });
+                appendMessage('系统', '已连接到聊天室', 'system');
+            });
+
+            socket.on('join', data => {
+                // 保存用户数据到本地
+                userData = data;
+            });
+
+            socket.on('say', data => {
+                // 处理接收到的消息数据
+                // data结构: {
+                //   'user' => {uid:0,avatar:''},
+                //   'message' => $data['message'],
+                //   'room' => $data['room'],
+                //   'sid' => $socket->getSid(),
+                // }
+
+                const user = data.user || {};
+                const message = data.message || '';
+                const senderName = user.uid ? `用户${user.uid}` : '匿名用户';
+
+                // 创建消息元素并展示头像和内容
+                appendMessageWithAvatar(senderName, message, 'received', user.avatar);
+
+                // 如果聊天窗口不可见，增加未读消息计数并更新徽章
+                if (!chatVisible) {
+                    unreadCount++;
+                    updateBadgeCount();
+                    // 播放通知声音
+                    playNotificationSound();
+                }
+            });
+
+            socket.on('disconnect', () => {
+                connectionStatus.textContent = '已断开连接';
+                connectionStatus.classList.add('disconnected');
+                appendMessage('系统', '连接已断开，正在尝试重新连接...', 'system');
+                attemptReconnect();
+            });
+
+            socket.on('connect_error', () => {
+                connectionStatus.textContent = '连接失败';
+                connectionStatus.classList.add('disconnected');
+                attemptReconnect();
+            });
+        }
+
+        function attemptReconnect() {
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                setTimeout(() => {
+                    appendMessage('系统', `正在尝试第 ${reconnectAttempts} 次重新连接...`, 'system');
+                    connectSocket();
+                }, reconnectDelay);
+            } else {
+                appendMessage('系统', '重连失败，请刷新页面重试', 'system');
+            }
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message && socket.connected) {
+                socket.emit('say', {
+                    room: 'general',
+                    message: message
+                });
+                appendMessage('我', message, 'sent');
+                messageInput.value = '';
+            } else if (!socket.connected) {
+                appendMessage('系统', '发送失败：未连接到服务器', 'system');
+            }
+        }
+
+        function appendMessage(sender, message, type) {
+            appendMessageWithAvatar(sender, message, type, null);
+        }
+
+        function appendMessageWithAvatar(sender, message, type, avatarUrl) {
+            if (type === 'system') {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${type}`;
+                messageElement.textContent = message;
+                messageArea.appendChild(messageElement);
+            } else {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${type}`;
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+
+                // 设置头像
+                if (avatarUrl) {
+                    // 如果提供了头像URL，使用头像图片
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = avatarUrl;
+                    avatarImg.style.width = '100%';
+                    avatarImg.style.height = '100%';
+                    avatarImg.style.borderRadius = '50%';
+                    avatarImg.style.objectFit = 'cover';
+                    avatarImg.onerror = function () {
+                        // 如果头像加载失败，显示首字母
+                        avatar.textContent = sender.charAt(0).toUpperCase();
+                        avatar.removeChild(avatarImg);
+                    };
+                    avatar.appendChild(avatarImg);
+                } else if (type === 'sent' && userData.avatar) {
+                    // 如果是发送的消息且有用户头像，使用用户头像
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = userData.avatar;
+                    avatarImg.style.width = '100%';
+                    avatarImg.style.height = '100%';
+                    avatarImg.style.borderRadius = '50%';
+                    avatarImg.style.objectFit = 'cover';
+                    avatarImg.onerror = function () {
+                        // 如果头像加载失败，显示首字母
+                        avatar.textContent = sender.charAt(0).toUpperCase();
+                        avatar.removeChild(avatarImg);
+                    };
+                    avatar.appendChild(avatarImg);
+                } else {
+                    // 否则使用首字母
+                    avatar.textContent = sender.charAt(0).toUpperCase();
+                }
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = message;
+
+                messageElement.appendChild(avatar);
+                messageElement.appendChild(messageContent);
+                messageArea.appendChild(messageElement);
+            }
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        messageInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function updateBadgeCount() {
+            const badge = document.querySelector('.badge');
+            const unreadCount = getUnreadCount();
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+                badge.classList.add('shake-animation');
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('shake-animation');
+            }
+        }
+
+        function clearBadgeCount() {
+            const badge = document.querySelector('.badge');
+            badge.textContent = '';
+            badge.style.display = 'none';
+            badge.classList.remove('shake-animation');
+            unreadCount = 0;
+        }
+
+        function toggleChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            const chatToggle = document.querySelector('.chat-toggle');
+            if (chatContainer.style.display === 'none' || !chatContainer.style.display) {
+                chatContainer.style.display = 'block';
+                chatToggle.style.transform = 'scale(0.8) rotate(180deg)';
+                chatVisible = true; // 更新聊天窗口可见状态
+                // 清除红标数量
+                clearBadgeCount();
+            } else {
+                chatContainer.style.display = 'none';
+                chatToggle.style.transform = 'scale(1)';
+                chatVisible = false; // 更新聊天窗口可见状态
+            }
+        }
+
+        function playNotificationSound() {
+            const sound = document.getElementById('notificationSound');
+            if (sound) {
+                sound.play().catch(error => {
+                    console.log('播放通知声音失败:', error);
+                });
+            }
+        }
+
+        // 初始连接
+        connectSocket();
+    </script>
+</body>
+
+</html>

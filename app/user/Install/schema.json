@@ -1,0 +1,445 @@
+{
+  "tables": {
+    "members": {
+      "columns": {
+        "uid": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "autoIncrement": true,
+          "primary": true,
+          "comment": "会员ID"
+        },
+        "uniqid": {
+          "type": "string",
+          "length": 32,
+          "nullable": true,
+          "comment": "唯一 ID",
+          "unique": true
+        },
+        "uin": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "uin 绑定会员ID 或其它系统 uid"
+        },
+        "username": {
+          "type": "string",
+          "length": 100,
+          "nullable": true,
+          "comment": "用户名,用于登录"
+        },
+        "nickname": {
+          "type": "string",
+          "length": 150,
+          "nullable": true,
+          "comment": "用户昵称"
+        },
+        "password": {
+          "type": "string",
+          "length": 32,
+          "nullable": true,
+          "comment": "密码"
+        },
+        "gender": {
+          "type": "integer",
+          "length": 1,
+          "default": 0,
+          "comment": "性别(1:男,2女,0未设置)"
+        },
+        "mobile": {
+          "type": "string",
+          "length": 20,
+          "nullable": true,
+          "comment": "登录手机号"
+        },
+        "email": {
+          "type": "string",
+          "length": 60,
+          "nullable": true,
+          "comment": "登录邮箱"
+        },
+        "groupid": {
+          "type": "integer",
+          "length": 6,
+          "default": -1,
+          "comment": "用户组 ID"
+        },
+        "groupexpiry": {
+          "type": "integer",
+          "length": 10,
+          "unsigned": true,
+          "default": 0,
+          "comment": "用户组有效期"
+        },
+        "experience": {
+          "type": "integer",
+          "length": 10,
+          "unsigned": true,
+          "default": 0,
+          "comment": "经验值"
+        },
+        "regtype": {
+          "type": "string",
+          "length": 20,
+          "nullable": true,
+          "comment": "注册类型,(email,mobile,weixin)"
+        },
+        "regip": {
+          "type": "string",
+          "length": 15,
+          "nullable": true,
+          "comment": "注册 IP"
+        },
+        "regdate": {
+          "type": "integer",
+          "length": 10,
+          "unsigned": true,
+          "nullable": true,
+          "comment": "注册时间"
+        },
+        "invisible": {
+          "type": "integer",
+          "length": 1,
+          "default": 0,
+          "comment": "是否隐身(1:是,0:否)"
+        },
+        "status": {
+          "type": "integer",
+          "length": 1,
+          "default": 1,
+          "comment": "状态"
+        }
+      },
+      "indexes": {
+        "username": ["username"],
+        "email": ["email"],
+        "uin": ["uin"],
+        "mobile": ["mobile"]
+      },
+      "options": {
+        "comment": "会员数据",
+        "charset": "utf8mb4",
+        "engine": "InnoDB",
+        "autoIncrement": 10000,
+        "row_format": "Compact"
+      }
+    },
+    "member_data": {
+      "columns": {
+        "id": {
+          "type": "integer",
+          "unsigned": true,
+          "autoIncrement": true,
+          "primary": true
+        },
+        "uid": {
+          "type": "integer",
+          "unsigned": true,
+          "default": 0,
+          "nullable": false
+        },
+        "uin": {
+          "type": "integer",
+          "unsigned": true,
+          "default": 0,
+          "comment": "论坛UID"
+        },
+        "field": {
+          "type": "string",
+          "length": 50,
+          "nullable": true,
+          "comment": "字段"
+        },
+        "value": {
+          "type": "string",
+          "length": 500,
+          "nullable": true,
+          "comment": "内容值"
+        },
+        "created_at": {
+          "type": "timestamp",
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "创建的时间"
+        },
+        "updated_at": {
+          "type": "timestamp",
+          "default": "CURRENT_TIMESTAMP",
+          "on_update": true,
+          "comment": "最近更新的时间"
+        }
+      },
+      "indexes": {
+        "uid": ["uid"],
+        "uin": ["uin"],
+        "field_value": ["field", "value"]
+      },
+      "options": {
+        "comment": "会员扩展资料",
+        "charset": "utf8mb4",
+        "engine": "InnoDB"
+      }
+    },
+    "member_authority": {
+      "columns": {
+        "id": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "autoIncrement": true,
+          "primary": true
+        },
+        "uid": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "uid"
+        },
+        "expiration": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "nullable": true,
+          "comment": "用户组有效期"
+        },
+        "groupid": {
+          "type": "integer",
+          "length": 6,
+          "unsigned": true,
+          "default": 0,
+          "comment": "用户组 ID"
+        }
+      },
+      "indexes": {
+        "uid_groupid": {
+          "columns": ["uid", "groupid"],
+          "unique": true
+        },
+        "groupid": ["groupid"],
+        "expiration": ["expiration"]
+      },
+      "options": {
+        "comment": "会员管理组权限",
+        "charset": "utf8mb4",
+        "engine": "InnoDB",
+        "row_format": "COMPACT"
+      }
+    },
+    "member_trace": {
+      "columns": {
+        "id": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "autoIncrement": true,
+          "primary": true
+        },
+        "uniqid": {
+          "type": "string",
+          "length": 32,
+          "default": "",
+          "nullable": false,
+          "comment": "唯一判断"
+        },
+        "uid": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "UID"
+        },
+        "uin": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "UIN(会员卡号,部分应用需要用UIN来比对)"
+        },
+        "type": {
+          "type": "string",
+          "length": 100,
+          "nullable": true,
+          "comment": "类型(login, publish)"
+        },
+        "relatedid": {
+          "type": "string",
+          "length": 50,
+          "nullable": true,
+          "comment": "类型对应ID"
+        },
+        "num": {
+          "type": "integer",
+          "length": 10,
+          "default": 1,
+          "comment": "次数"
+        },
+        "created_at": {
+          "type": "timestamp",
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "创建的时间"
+        },
+        "updated_at": {
+          "type": "timestamp",
+          "default": "CURRENT_TIMESTAMP",
+          "on_update": true,
+          "nullable": true,
+          "comment": "最后更新时间"
+        }
+      },
+      "indexes": {
+        "uniqid": {
+          "columns": ["uniqid"],
+          "unique": true
+        },
+        "uid_uin": ["uid", "uin"],
+        "type_relatedid": ["type", "relatedid"],
+        "created_at": ["created_at"],
+        "updated_at": ["updated_at"]
+      },
+      "options": {
+        "comment": "用户行为轨迹",
+        "charset": "utf8mb4",
+        "engine": "InnoDB",
+        "row_format": "COMPACT"
+      }
+    },
+    "member_groups": {
+      "columns": {
+        "id": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "autoIncrement": true,
+          "primary": true
+        },
+        "type": {
+          "type": "enum",
+          "values": ["default", "member", "system"],
+          "default": "member",
+          "nullable": false,
+          "comment": "类型"
+        },
+        "title": {
+          "type": "string",
+          "length": 100,
+          "default": "",
+          "comment": "名称"
+        },
+        "alias": {
+          "type": "string",
+          "length": 100,
+          "default": "",
+          "comment": "别名"
+        },
+        "anicount": {
+          "type": "integer",
+          "length": 10,
+          "default": 0,
+          "comment": "升级点数"
+        },
+        "authority": {
+          "type": "text",
+          "nullable": true,
+          "comment": "权限"
+        },
+        "message": {
+          "type": "string",
+          "length": 255,
+          "default": "",
+          "comment": "简单介绍"
+        },
+        "aid": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "会员组图片 ID"
+        },
+        "sort": {
+          "type": "integer",
+          "length": 11,
+          "unsigned": true,
+          "default": 0,
+          "comment": "排序"
+        },
+        "options": {
+          "type": "text",
+          "nullable": true,
+          "comment": "配置"
+        },
+        "status": {
+          "type": "integer",
+          "length": 1,
+          "default": 1,
+          "comment": "状态(0:禁用,1:启用)"
+        }
+      },
+      "indexes": {
+        "type": ["type"],
+        "index_member_groups_status": ["status"]
+      },
+      "options": {
+        "comment": "会员组及权限",
+        "charset": "utf8mb4",
+        "engine": "InnoDB",
+        "row_format": "COMPACT"
+      },
+      "data": [
+        {
+          "id": 1,
+          "type": "system",
+          "title": "管理员",
+          "alias": "admin",
+          "anicount": 0,
+          "authority": "{\"immission\":1}",
+          "message": null,
+          "aid": 0,
+          "sort": 0,
+          "options": "[]",
+          "status": 1
+        },
+        {
+          "id": 2,
+          "type": "system",
+          "title": "运营",
+          "alias": "Operations",
+          "anicount": 0,
+          "authority": "[]",
+          "message": null,
+          "aid": 0,
+          "sort": 0,
+          "options": "[]",
+          "status": 1
+        },
+        {
+          "id": 3,
+          "type": "member",
+          "title": "新手",
+          "alias": "",
+          "anicount": 0,
+          "authority": "[]",
+          "message": null,
+          "aid": 0,
+          "sort": 0,
+          "options": "[]",
+          "status": 1
+        },
+        {
+          "id": 4,
+          "type": "member",
+          "title": "初级",
+          "alias": "",
+          "anicount": 100,
+          "authority": "[]",
+          "message": null,
+          "aid": 0,
+          "sort": 0,
+          "options": "[]",
+          "status": 1
+        }
+      ]
+    }
+  }
+}

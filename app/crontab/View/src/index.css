@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── 石墨 + 青碧 (Teal & Clay) 设计令牌 ── */
+
+  /* 底色层 */
+  --color-page: #e9eeed; /* 页面底色, 带青碧色相的冷灰 */
+  --color-surface: #ffffff; /* 卡片 / 面板 */
+  --color-inset: #f1f5f4; /* 内嵌层: 输入框 / 表头 / 代码底 */
+  --color-line: rgba(16, 38, 38, 0.09); /* 发丝分隔线, 半透明 */
+
+  /* 墨色层 */
+  --color-ink: #0f2322;
+  --color-ink-soft: #3a4b4a;
+  --color-ink-faint: #5f7271;
+  --color-ink-inverse: #dff0ec;
+
+  /* 品牌层 */
+  --color-accent: #176c6b;
+  --color-accent-strong: #105453;
+  --color-accent-soft: rgba(23, 108, 107, 0.1);
+  --color-clay: #b25534;
+  --color-clay-soft: rgba(196, 99, 63, 0.11);
+
+  /* 语义层 (与品牌分离, 不承载品牌识别) */
+  --color-up: #2c7a62;
+  --color-up-soft: rgba(44, 122, 98, 0.11);
+  --color-down: #c0453c;
+  --color-down-soft: rgba(192, 69, 60, 0.1);
+  --color-warn: #9a6710;
+  --color-warn-soft: rgba(183, 122, 22, 0.12);
+  /* 深色代码底上的提亮语义色 (日志行) */
+  --color-down-bright: #f4907f;
+  --color-warn-bright: #e6b45c;
+
+  /* 代码块 */
+  --color-code-bg: #10201e;
+  --color-code-ink: #cfe3de;
+
+  /* 阴影: 向墨色偏移, 不用纯黑 */
+  --shadow-whisper: 0 1px 3px rgba(19, 61, 74, 0.06);
+  --shadow-lifted: 0 6px 20px -8px rgba(19, 61, 74, 0.18);
+  --shadow-float: 0 40px 90px -50px rgba(19, 61, 74, 0.38);
+  --shadow-glow: 0 8px 24px -6px rgba(23, 108, 107, 0.32);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--color-page);
+  color: var(--color-ink-soft);
+}
+
+/* 数字等宽: 表格与统计数值 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 统一的细滚动条 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 38, 38, 0.18) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(16, 38, 38, 0.18);
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 38, 38, 0.3);
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 键盘可达性: 统一的软焦点环 */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(23, 108, 107, 0.18);
+}
+
+/* 动效降级 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
